@@ -8,7 +8,6 @@ tests_require = []
 
 classifiers = [
     'Development Status :: 3 - Alpha',
-    'License :: OSI Approved :: Apache Software License',
     'Programming Language :: Python :: 3',
 ]
 
@@ -18,7 +17,6 @@ setup(
     author="BUPT-GAMMA LAB",
     author_email="jixy2314@bupt.edu.cn",
     maintainer="Xingyuan Ji",
-    license="Apache-2.0 License",
     description="Graph Database Interface",
     url="https://github.com/xy-Ji/graphDBInterface",
     download_url="https://github.com/xy-Ji/graphDBInterface",
