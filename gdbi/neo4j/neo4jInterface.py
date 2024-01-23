@@ -9,7 +9,7 @@ class Neo4jInterface:
         self.driver = GraphDatabase.driver(graph_address, auth=(user_name, password))
         return self.driver
     
-    def get_graph(self, conn: GraphDBConnection,
+    def get_graph(conn: GraphDBConnection,
                   graph_name: str, 
                   node_export_config: List[NodeExportConfig], 
                   edge_export_config: List[EdgeExportConfig]) -> Dict:
