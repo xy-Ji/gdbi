@@ -1,7 +1,8 @@
 from neo4j import GraphDatabase
 import torch
 from typing import List, Dict
-from gdbi import NodeExportConfig, EdgeExportConfig
+from node_export_config import NodeExportConfig
+from edge_export_config import EdgeExportConfig
 
 class Neo4jInterface:
     
@@ -9,7 +10,7 @@ class Neo4jInterface:
         self.driver = GraphDatabase.driver(graph_address, auth=(user_name, password))
         return self.driver
     
-    def get_graph(conn: GraphDBConnection,
+    def get_graph(self, conn: GraphDBConnection,
                   graph_name: str, 
                   node_export_config: List[NodeExportConfig], 
                   edge_export_config: List[EdgeExportConfig]) -> Dict:
