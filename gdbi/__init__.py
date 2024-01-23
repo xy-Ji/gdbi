@@ -1,11 +1,10 @@
-from .neo4j import Neo4jInterface
 from .node_export_config import NodeExportConfig
 from .edge_export_config import EdgeExportConfig
-
+from .neo4j import Neo4jInterface
 __all__ = [
-    'Neo4jInterface',
     'NodeExportConfig',
-    'EdgeExportConfig'
+    'EdgeExportConfig',
+    'Neo4jInterface'
 ]
 
 classes = __all__
