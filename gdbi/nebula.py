@@ -5,55 +5,8 @@ from nebula3.Config import SessionPoolConfig
 import re
 import torch
 import numpy as np
-
-
-class NodeExportConfig:
-    """
-    parameters
-    ----------
-    label_name: str
-        The name of node type
-    x_property_names: List[str]
-        Optional, the attribute name corresponding to the node feature
-    y_property_names: List[str]
-        Optional, the attribute name corresponding to the node label
-    """
-
-    def __init__(self, label_name: str,
-                 x_property_names: List[str] = None,
-                 y_property_names: List[str] = None):
-        self.label_name = label_name
-        if x_property_names is None:
-            self.x_property_names = []
-        if y_property_names is None:
-            self.y_property_names = []
-
-
-class EdgeExportConfig:
-    """
-    parameters
-    ----------
-    label_name: str
-        The name of edge type
-    src_dst_label: (str, str)
-        The type of source node and destination node
-    x_property_names: List[str]
-        Optional, the attribute name corresponding to the edge feature
-    y_property_names: List[str]
-        Optional, the attribute name corresponding to the edge label
-    """
-
-    def __init__(self, label_name: str,
-                 src_dst_label: (str, str) = ('v', 'v'),
-                 x_property_names: List[str] = None,
-                 y_property_names: List[str] = None):
-        self.label_name = label_name
-        self.src_dst_label = src_dst_label
-        if x_property_names is None:
-            self.x_property_names = []
-        if y_property_names is None:
-            self.y_property_names = []
-
+from node_export_config import NodeExportConfig
+from edge_export_config import EdgeExportConfig
 
 class NebulaInterface():
     def __init__(self):
@@ -70,6 +23,7 @@ class NebulaInterface():
         auth_result = conn.authenticate(user_name, password)
         assert auth_result.get_session_id() != 0
         self.connection_database = conn
+        return conn
 
     def _get_attr_value(self, query: str):
         res = self.connection_graph.execute(query)
@@ -92,7 +46,7 @@ class NebulaInterface():
         return result_list
 
     def get_graph(
-            self,
+            self, conn: GraphDBConnection,
             graph_name: str,
             node_export_config: Optional[List[NodeExportConfig]] = None,
             edge_export_config: Optional[List[EdgeExportConfig]] = None,
