@@ -1,15 +1,53 @@
 # graphDBInterface
 
 --------------------------------------------------------------------------------
-## Environment Settings
-**neo4j**
+## Introduction to graph databases
+### neo4j
 
-Database version: neo4j community 5.15.0
+**Database version** 
+neo4j community 5.15.0
+
+**Python driver installation**
+   ```bash
+   pip install neo4j==5.16.0
    ```
-   python==3.9.18
-   neo4j==5.16.0
-   torch==2.1.2
-   ```
+
+**Import csv files into graph database**
+```
+LOAD CSV WITH HEADERS FROM "file:///data.csv" AS row
+CREATE (:graphname_labelname {ID: row.ID, ... });
+```
+
+Take the cora dataset as an example:
+```
+LOAD CSV WITH HEADERS FROM "file:///cora/cora_content.csv" AS row
+CREATE (:cora_node {ID: toInteger(row.ID), label: toInteger(row.label), attr:row.attr });
+```
+```
+LOAD CSV WITH HEADERS FROM 'file:///cora/cora_cites.csv' AS row
+MATCH (from:cora_node {ID: toInteger(row.ID1)}), (to:cora_node {ID: toInteger(row.ID2)})
+CREATE (from)-[r:cora_edge]→(to);
+```
+**Tips**
+The neo4j community version does not support switching databases, so when naming nodes and relationships, add `graphname_` before `label_name.` to distinguish the dataset.
+
+### NebulaGraph
+**Database version**
+ 3.6.0
+**Python driver installation**
+```bash
+pip install nebula3-python==3.4.0
+```
+**Tips**
+When querying NebulaGraph database on attribute values, you need to set the index first, otherwise the query cannot be performed normally. The nGQL statement to add an index is as follows:
+```
+CREATE TAG INDEX IF NOT EXISTS index_label ON node(label);
+```
+### gStore
+
+### AtlasGraph
+AtlasGraph is the first domestically developed next-generation cloud-native real-time parallel graph database based on Rust.
+AtlasGraph Homepage:[https://atlasgraph.io/](https://atlasgraph.io/)
 
 ## Functions
 
