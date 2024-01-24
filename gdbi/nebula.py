@@ -5,8 +5,7 @@ from nebula3.Config import SessionPoolConfig
 import re
 import torch
 import numpy as np
-from node_export_config import NodeExportConfig
-from edge_export_config import EdgeExportConfig
+from gdbi import NodeExportConfig, EdgeExportConfig
 
 class NebulaInterface():
     def __init__(self):

@@ -1,8 +1,7 @@
 from neo4j import GraphDatabase
 import torch
 from typing import List, Dict
-from node_export_config import NodeExportConfig
-from edge_export_config import EdgeExportConfig
+from gdbi import NodeExportConfig, EdgeExportConfig
 
 class Neo4jInterface:
     
