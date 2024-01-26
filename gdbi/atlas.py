@@ -7,14 +7,18 @@ from atlas_connector import AtlasClient as Builtin_AtlasClient
 from atlas_connector import AtlasMapping as Builtin_AtlasMapping
 from atlas_connector import ItemConfig as Builtin_ItemConfig
 from google.protobuf.internal import containers as _containers
+from atlas_gnn.graph.generate_graph import write_vertex_value, write_edge_value
+from atlas_gnn.graph.graph_collection import match_node, match_edge
+from typing import Set
+import torch as th
 
 INCLUDE = "include"
 EXCLUDE = "exclude"
 
 
 class AtlasClient:
-    def __init__(self, log_file_path: Path, meta_addr: str):
-        self.atlas_client = Builtin_AtlasClient(str(log_file_path), meta_addr)
+    def __init__(self, log_file_path: Path, meta_addr: str, user: str, password: str):
+        self.atlas_client = Builtin_AtlasClient(str(log_file_path), meta_addr, user, password)
 
 
 class VertexConfig:
@@ -91,9 +95,9 @@ def load_graph(
     vertex_label: str = "Vertex",
     edge_label: str = "Edge",
 ) -> Tuple[
-    Dict[Tuple[str, str, str], Tuple[np.ndarray, np.ndarray]],
-    Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]],
-    Tuple[
+    Dict[Tuple[str, str, str], Tuple[np.ndarray, np.ndarray]],      
+    Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]],            
+    Tuple[                                                          
         Dict[Tuple[str, str, str], np.ndarray], Dict[Tuple[str, str, str], np.ndarray]
     ],
     AltasMapping,
@@ -123,50 +127,67 @@ def load_graph(
         atlas_mapping,
     )
 
+class AtlasInterface:
 
-def write_vertex_value(
-    atlas_client: AtlasClient,
-    atlas_mapping: AltasMapping,
-    graph_name: str,
-    label_name: str,
-    property_name: str,
-    inner_ids: np.ndarray,
-    values: np.ndarray,
-) -> bool:
-    return atlas_connector.write_vertex_value(
-        atlas_client.atlas_client,
-        atlas_mapping.rust_atlas_mapping,
-        graph_name,
-        label_name,
-        property_name,
-        inner_ids,
-        values,
-    )
+    def GraphDBConnection(self, graph_address, user_name, password):
+        self.atlas_client = AtlasClient(log_file_path=Path("./atlas_gnn.log"), meta_addr=graph_address, user=user_name, password=password)
+        return self.atlas_client
+
+    def get_graph(self, conn: AtlasClient, graph_name: str, node_export_config: List[VertexConfig], edge_export_config: List[EdgeConfig]):
+        
+        X = {}
+        edge_index = {}
+        edge_attr = {}
+        Y = {}
+        pos_dict = {}
+
+        (
+        graph_data,
+        (vertex_labels_map, vertex_feats_map),
+        (edge_labels_map, edge_feats_map),
+        atlas_mapping,
+        ) = load_graph(
+        atlas_client=conn,
+        graph_name=graph_name,
+        project_name=graph_name,
+        export_batch_size=1024,
+        export_queue_size=512,
+        vertices=node_export_config,
+        edges=edge_export_config,
+        )
+
+        X = vertex_feats_map
+        Y = vertex_labels_map
+        edge_attr = edge_feats_map
+        edge_index = graph_data
+
+        Graph = {
+            'X_dict': X,
+            'edge_index_dict': edge_index,
+            'edge_attr_dict': edge_attr,
+            'Y_dict': Y,
+            'pos_dict': pos_dict
+        }
+
+        return Graph
+
+    def match(self, graph_name: str, label_name: List[str] = [''], src_dst_label: (str, str) = None, x_property_names: Dict = None, y_property_names: Dict = None):
+        atlas_graph = self.atlas_client
+        if src_dst_label is None:
+            result = match_node(atlas_graph, graph_name, label_name, x_property_names, y_property_names)
+        else:
+            result = match_edge(atlas_graph, graph_name, label_name,src_dst_label, x_property_names, y_property_names)
+
+        return result
+            
+
+    def write_property(self, graph_name: str, label_name: List[str] = [''], src_dst_label: (str, str) = None, property_names: str = None, property_value: Dict = None):
+        atlas_graph = self.atlas_client
+        if src_dst_label is None:
+            write_vertex_value(atlas_graph, graph_name, label_name, property_names, property_value)
+        else:
+            write_edge_value(atlas_graph, graph_name, label_name, src_dst_label, property_names, property_value)
 
 
-def write_edge_value(
-    atlas_client: AtlasClient,
-    atlas_mapping: AltasMapping,
-    graph_name: str,
-    label_name: str,
-    src_label_name: str,
-    dst_label_name: str,
-    property_name: str,
-    inner_ids: np.ndarray,
-    src_inner_ids: np.ndarray,
-    dst_inner_ids: np.ndarray,
-    values: np.ndarray,
-) -> bool:
-    return atlas_connector.write_edge_value(
-        atlas_client.atlas_client,
-        atlas_mapping.rust_atlas_mapping,
-        graph_name,
-        label_name,
-        src_label_name,
-        dst_label_name,
-        property_name,
-        inner_ids,
-        src_inner_ids,
-        dst_inner_ids,
-        values,
-    )
+        
+
