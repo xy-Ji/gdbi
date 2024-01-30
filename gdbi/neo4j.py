@@ -179,6 +179,6 @@ class Neo4jInterface:
                     query = f"MATCH (src:{src} {{ID: {ID[0]}}})-[r:{label_name}]->(dst:{dst} {{ID: {ID[1]}}}) SET r.{property_name} = {property_values[ID]} RETURN r"
                     result = session.run(query)
                     if not result.consume().counters._contains_updates:
-                        query = f"MATCH (src:cora_node {{ID: {ID[0]}}}), (dst:cora_node {{ID: {ID[1]}}}) CREATE (src)-[r:{label_name} {{{property_name}:{property_values[ID]}}}]->(dst) RETURN r"
+                        query = f"MATCH (src:{src} {{ID: {ID[0]}}}), (dst:{dst} {{ID: {ID[1]}}}) CREATE (src)-[r:{label_name} {{{property_name}:{property_values[ID]}}}]->(dst) RETURN r"
                         result = session.run(query)
                 return True
