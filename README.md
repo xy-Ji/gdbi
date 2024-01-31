@@ -114,7 +114,7 @@ Query interface. Used to query the graph database and obtain graph data informat
 * **label_name** *(string)* - The type of node or edge.
 * **src_dst_label** *((string, string))* - The type of source node and destination node.
 * **x_property_names** *(Dict[string: value])* - The property names and their values of node or edge.
-* **x_property_names** *(Dict[string: value])* - The label names and their values of node or edge.
+* **y_property_names** *(Dict[string: value])* - The label names and their values of node or edge.
 
 
 #### Returns
