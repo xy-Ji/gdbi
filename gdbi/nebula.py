@@ -129,25 +129,27 @@ class NebulaInterface():
         for node_config in node_export_config:
             table_name = node_config.label_name
             node_x_values = None
-            for attr_name in node_config.x_property_names:
-                match_clause = "MATCH (item:%s)" % table_name
-                return_clause = "RETURN item.%s.%s AS RESULT, id(item) AS ID ORDER BY ID" % (table_name, attr_name)
-                query = "%s %s" % (match_clause, return_clause)
-                result = self._get_attr_value(query)
-                if node_x_values == None:
-                    node_x_values = np.array(result)
-                else:
-                    node_x_values = np.concatenate((node_x_values, np.array(result)), axis=1)
+            if node_config.x_property_names is not None:
+                for attr_name in node_config.x_property_names:
+                    match_clause = "MATCH (item:%s)" % table_name
+                    return_clause = "RETURN item.%s.%s AS RESULT, id(item) AS ID ORDER BY ID" % (table_name, attr_name)
+                    query = "%s %s" % (match_clause, return_clause)
+                    result = self._get_attr_value(query)
+                    if node_x_values == None:
+                        node_x_values = np.array(result)
+                    else:
+                        node_x_values = np.concatenate((node_x_values, np.array(result)), axis=1)
             node_y_values = None
-            for attr_name in node_config.y_property_names:
-                match_clause = "MATCH (item:%s)" % table_name
-                return_clause = "RETURN item.%s.%s AS RESULT, id(item) AS ID ORDER BY ID" % (table_name, attr_name)
-                query = "%s %s" % (match_clause, return_clause)
-                result = self._get_attr_value(query)
-                if node_y_values == None:
-                    node_y_values = np.array(result)
-                else:
-                    node_y_values = np.concatenate((node_y_values, np.array(result)), axis=1)
+            if node_config.y_property_names is not None:
+                for attr_name in node_config.y_property_names:
+                    match_clause = "MATCH (item:%s)" % table_name
+                    return_clause = "RETURN item.%s.%s AS RESULT, id(item) AS ID ORDER BY ID" % (table_name, attr_name)
+                    query = "%s %s" % (match_clause, return_clause)
+                    result = self._get_attr_value(query)
+                    if node_y_values == None:
+                        node_y_values = np.array(result)
+                    else:
+                        node_y_values = np.concatenate((node_y_values, np.array(result)), axis=1)
             if node_x_values is not None:
                 X_dict[table_name] = torch.Tensor(node_x_values)
             if node_y_values is not None:
