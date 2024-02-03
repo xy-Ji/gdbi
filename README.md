@@ -1,6 +1,25 @@
 # graphDBInterface
 
 --------------------------------------------------------------------------------
+The interface between the graph neural network computation framework and the graph database defines the methods and rules for data interaction between the framework and the graph database. The basic process of integrating the graph database as an external data source into the graph neural network framework can be summarized in the following steps:
+
+* Connect the graph neural network framework to the database;
+* Pull data from the graph database and construct graph data types supported by the graph neural network framework;
+* Use modules such as sampling and message passing in the graph neural network framework for training/inference;
+* Write back the obtained embeddings/prediction results to the graph database.
+  
+Additionally, considering that the graph neural network framework may want to retrieve information for specific parts of the graph rather than the entire graph, it is necessary to provide query interfaces for the graph database to meet the querying needs of the graph neural network framework.
+
+Based on this, the graph database interface should mainly include the following modules:
+
+* Graph Database Connection Interface: Implements the connection between the graph neural network computation framework and the graph database, enabling the computation framework to interact with the graph database through interfaces.
+
+* Data Query Interface: Used to query and retrieve graph data from the graph database. These interfaces may include queries for specified nodes or edges, filtering data based on conditions, obtaining attribute information of nodes/edges, etc., and inputting them into the graph neural network framework.
+
+* Data Retrieval Interface: Used to import data from the graph database into the computation framework for training and inference of graph neural network models. These interfaces can transform the data obtained from the graph database into a specified intermediate standard data format.
+
+* Data Write-Back Interface: After the graph neural network computation, there may be a need to perform write-back operations on the data in the graph database, such as writing the training results back to the graph database. Therefore, the interface specification needs to define corresponding data write-back interfaces.
+
 ## Introduction to graph databases
 ### neo4j
 

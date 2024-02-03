@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from setuptools import setup, find_packages
 
-install_requires = ['neo4j', 'torch']
+install_requires = ['neo4j', 'torch', 'nebula3-python']
 setup_requires = []
 tests_require = []
 
