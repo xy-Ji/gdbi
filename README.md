@@ -100,8 +100,8 @@ Through the export configuration of nodes and edges, the graph data structure in
 * **node_export_config** *(NodeExportConfig)* - The export configuration of nodes.
     **NodeExportConfig**
     * **labelname** *(string)* - The name of node type.
-    * **x_property_names** *(List[string])* - The attribute name corresponding to the edge feature.
-    * **y_property_names** *(List[string])* - The attribute name corresponding to the edge label.
+    * **x_property_names** *(List[string])* - The attribute name corresponding to the node feature.
+    * **y_property_names** *(List[string])* - The attribute name corresponding to the node label.
 * **edge_export_config** *(EdgeExportConfig)* - The export configuration of edges.
     **EdgeExportConfig**
     * **labelname** *(string)* - The name of edge type.
