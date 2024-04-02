@@ -4,11 +4,12 @@ import json
 from gdbi import NodeExportConfig, EdgeExportConfig, GstoreConnector
 
 class GstoreInterface:
-    def GraphDBConnection(self, graph_address:dict, user_name, password):
-        if 'IP' not in graph_address or 'Port' not in graph_address or 'httpType' not in graph_address:
-            raise ValueError("graph_address 必须包含 'IP', 'Port' 和 'httpType'.")
-        self.gc = GstoreConnector.GstoreConnector(graph_address['IP'], graph_address['Port'], user_name, password, http_type=graph_address['httpType'])
+    def GraphDBConnection(self, graph_address, user_name, password):
+        ip, port = graph_address.split(':')
+        port, httpType = port.split('/')
+        self.gc = GstoreConnector.GstoreConnector(ip, port, user_name, password, http_type=httpType)
         return self.gc
+    
     def get_graph(self, conn: GraphDBConnection,
                   graph_name: str,
                   node_export_config: List[NodeExportConfig],
@@ -210,11 +211,11 @@ class GstoreInterface:
 
 
 # if __name__ == "__main__":
-#     graph_address = {'IP':'61.136.101.220', 'Port':'20022','httpType':'ghttp'}
+#     graph_address = '61.136.101.220:20022/ghttp'
 #     user_name = "root"
 #     password = "123456"
 #     db_name = "cora"
-#     gstore_instance = gstoreInstance()
+#     gstore_instance = GstoreInterface()
 #     cnn = gstore_instance.GraphDBConnection(graph_address,user_name,password)
 # # get_graph
 #     node1 = NodeExportConfig('Paper',['feature'],['classLabel'])
