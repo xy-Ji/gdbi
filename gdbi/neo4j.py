@@ -95,7 +95,7 @@ class Neo4jInterface:
               x_property_names: Dict = None, 
               y_property_names: Dict = None) -> List:
         with self.driver.session() as session:
-            ID_list = []
+            result_list = []
             if src_dst_label is None:
                 for lname in label_name:
                     if lname == '':
@@ -109,12 +109,13 @@ class Neo4jInterface:
                         query += "WHERE all(x in keys($x_property_names) WHERE n[x] = $x_property_names[x]) "
                     elif y_property_names is not None:
                         query += "WHERE all(y in keys($y_property_names) WHERE n[y] = $y_property_names[y]) "
-                    query += "RETURN n.ID"
+                    query += "RETURN n"
                     result = session.run(query, parameters={'x_property_names': x_property_names, 'y_property_names': y_property_names})
-                    values = result.values()
-                    if values != []:
-                        for value in values:
-                            ID_list.append(value)
+                    for record in result:
+                        node = record['n']
+                        node_dict = {prop: value for prop, value in node.items()}
+                        result_list.append(node_dict)
+
                 for lname in label_name:
                     if lname == '':
                         query = f"MATCH (src)-[r]->(dst) "
@@ -127,12 +128,14 @@ class Neo4jInterface:
                         query += "WHERE all(x in keys($x_property_names) WHERE r[x] = $x_property_names[x]) "
                     elif y_property_names is not None:
                         query += "WHERE all(y in keys($y_property_names) WHERE r[y] = $y_property_names[y]) "
-                    query += "RETURN src.ID, dst.ID"
+                    query += "RETURN r, src.ID, dst.ID"
                     result = session.run(query, parameters={'x_property_names': x_property_names, 'y_property_names': y_property_names})
-                    values = result.values()
-                    if values != []:
-                        for value in values:
-                            ID_list.append(value)
+                    for record in result:
+                        node = record['r']
+                        node_dict = {prop: value for prop, value in node.items()}
+                        node_dict.update({'src': record['src.ID'], 'dst': record['dst.ID']})
+                        result_list.append(node_dict)
+                        
             else:
                 src, dst = src_dst_label
                 src = graph_name + '_' + src
@@ -149,11 +152,15 @@ class Neo4jInterface:
                         query += "WHERE all(x in keys($x_property_names) WHERE r[x] = $x_property_names[x]) "
                     elif y_property_names is not None:
                         query += "WHERE all(y in keys($y_property_names) WHERE r[y] = $y_property_names[y]) "
-                    query += "RETURN src.ID, dst.ID"
+                    query += "RETURN r, src.ID, dst.ID"
                     result = session.run(query, parameters={'x_property_names': x_property_names, 'y_property_names': y_property_names})
-                    if result.values() != []:
-                        ID_list.append(result.values())
-            return ID_list
+                    for record in result:
+                        node = record['r']
+                        node_dict = {prop: value for prop, value in node.items()}
+                        node_dict.update({'src': record['src.ID'], 'dst': record['dst.ID']})
+                        result_list.append(node_dict)
+                        
+            return result_list
         
     def write_property(self, graph_name: str, 
                        label_name: str, 
