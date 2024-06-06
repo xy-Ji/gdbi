@@ -131,7 +131,7 @@ class NebulaInterface():
             node_x_values = None
             if node_config.x_property_names is not None:
                 for attr_name in node_config.x_property_names:
-                    match_clause = "MATCH (item:%s)" % table_name
+                    match_clause = "MATCH (item)"
                     return_clause = "RETURN item.%s.%s AS RESULT, id(item) AS ID ORDER BY ID" % (table_name, attr_name)
                     query = "%s %s" % (match_clause, return_clause)
                     result = self._get_attr_value(query)
@@ -142,7 +142,7 @@ class NebulaInterface():
             node_y_values = None
             if node_config.y_property_names is not None:
                 for attr_name in node_config.y_property_names:
-                    match_clause = "MATCH (item:%s)" % table_name
+                    match_clause = "MATCH (item)"
                     return_clause = "RETURN item.%s.%s AS RESULT, id(item) AS ID ORDER BY ID" % (table_name, attr_name)
                     query = "%s %s" % (match_clause, return_clause)
                     result = self._get_attr_value(query)
@@ -156,13 +156,12 @@ class NebulaInterface():
                 Y_dict[table_name] = torch.Tensor(node_y_values).to(torch.int64)
 
         for edge_config in edge_export_config:
+            src_type, dst_type = edge_config.src_dst_label
             edge_type = edge_config.label_name
             edge_x_values = None
             if edge_config.x_property_names is not None:
                 for attr_name in edge_config.x_property_names:
-                    match_clause = "MATCH() - [item: %s]->()" % edge_type
-                    return_clause = "RETURN item.%s AS RESULT, item.id AS ID ORDER BY ID" % attr_name
-                    query = "%s %s" % (match_clause, return_clause)
+                    query = f"MATCH(:{src_type}) - [item:{edge_type}]->(:{dst_type}) RETURN item.{attr_name} AS RESULT, item.id AS ID ORDER BY ID"
                     result = self._get_attr_value(query)
                     if edge_x_values == None:
                         edge_x_values = np.array(result)
@@ -171,9 +170,7 @@ class NebulaInterface():
             edge_y_values = None
             if edge_config.y_property_names is not None:
                 for attr_name in edge_config.y_property_names:
-                    match_clause = "MATCH() - [item: %s]->()" % edge_type
-                    return_clause = "RETURN item.%s AS RESULT, item.id AS ID ORDER BY ID" % attr_name
-                    query = "%s %s" % (match_clause, return_clause)
+                    query = f"MATCH(:{src_type}) - [item:{edge_type}]->(:{dst_type}) RETURN item.{attr_name} AS RESULT, item.id AS ID ORDER BY ID"
                     result = self._get_attr_value(query)
                     if edge_y_values == None:
                         edge_y_values = np.array(result)
@@ -184,10 +181,12 @@ class NebulaInterface():
             if edge_y_values is not None:
                 Y_dict[edge_type] = torch.Tensor(edge_y_values[0]).to(torch.int64)
         for edge_config in edge_export_config:
+            src_type, dst_type = edge_config.src_dst_label
             edge_index_part = []
             edge_type = edge_config.label_name
-            query = f"MATCH (v1)-[e:{edge_type}]->(v2) RETURN id(v1) AS SID, id(v2) AS DID ORDER BY SID, DID;"
+            query = f"MATCH (v1:{src_type})-[e:{edge_type}]->(v2:{dst_type}) RETURN id(v1) AS SID, id(v2) AS DID ORDER BY SID, DID;"
             result = self.connection_graph.execute(query)
+            print(query)
             s = list(map(int, map(str, result.column_values('SID'))))
             d = list(map(int, map(str, result.column_values('DID'))))
             edge_index_part.append(s)
@@ -240,22 +239,36 @@ class NebulaInterface():
                 else:
                     query = f"MATCH (item:{lname}) "
                 query += self._get_where(f"item.{lname}", x_property_names, y_property_names)
-                query += "RETURN id(item)"
+                query += f"RETURN item.{lname}"
                 result = self.connection_graph.execute(query)
-                res = result.column_values('id(item)')
+                res = result.column_values(f'item.{lname}')
                 for record in res:
-                    result_list.append(int(str(record).replace('"', '')))
+                    result_list.append(record)
             for lname in label_name:
                 if lname == '':
                     query = f"MATCH (src)-[r]->(dst) "
                 else:
                     query = f"MATCH (src)-[r:{lname}]->(dst) "
                 query += self._get_where("r", x_property_names, y_property_names)
-                query += "RETURN id(r)"
+                edge_properties = []
+                describe_edge_query = f"DESCRIBE EDGE {lname}"
+                attributes_result = self.connection_graph.execute(describe_edge_query)
+                if attributes_result.is_empty():
+                    continue
+                for attr in attributes_result:
+                    attr_name = str(attr.get_value_by_key("Field")).replace('"', '')
+                    edge_properties.append(attr_name)
+                return_clause = "RETURN id(src), id(dst)"
+                for pro in edge_properties:
+                    return_clause += f", r.{pro}"
+                query += return_clause
                 result = self.connection_graph.execute(query)
-                res = result.column_values('id(r)')
-                for record in res:
-                    result_list.append(int(str(record).replace('"', '')))
+                for record in result:
+                    record_dict = {'src.ID': record.get_value_by_key('id(src)'), 'dst.ID': record.get_value_by_key('id(dst)')}
+                    for pro in edge_properties:
+                        record_dict.update({pro: record.get_value_by_key(f'r.{pro}')})
+                    result_list.append(record_dict)
+                
         else:
             src, dst = src_dst_label
             for lname in label_name:
@@ -264,11 +277,24 @@ class NebulaInterface():
                 else:
                     query = f"MATCH (src:{src})-[r:{lname}]->(dst:{dst}) "
                 query += self._get_where("r", x_property_names, y_property_names)
-                query += "RETURN id(src), id(dst)"
+                edge_properties = []
+                describe_edge_query = f"DESCRIBE EDGE {lname}"
+                attributes_result = self.connection_graph.execute(describe_edge_query)
+                if attributes_result.is_empty():
+                    continue
+                for attr in attributes_result:
+                    attr_name = str(attr.get_value_by_key("Field")).replace('"', '')
+                    edge_properties.append(attr_name)
+                return_clause = "RETURN id(src), id(dst)"
+                for pro in edge_properties:
+                    return_clause += f", r.{pro}"
+                query += return_clause
                 result = self.connection_graph.execute(query)
-                src = np.array(result.column_values('id(src)'))
-                dst = np.array(result.column_values('id(dst)'))
-                result_list = list(zip(src,dst))
+                for record in result:
+                    record_dict = {'src.ID': record.get_value_by_key('id(src)'), 'dst.ID': record.get_value_by_key('id(dst)')}
+                    for pro in edge_properties:
+                        record_dict.update({pro: record.get_value_by_key(f'r.{pro}')})
+                    result_list.append(record_dict)
         return result_list
 
     def write_property(self, graph_name: str,

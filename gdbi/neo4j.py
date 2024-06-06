@@ -22,7 +22,7 @@ class Neo4jInterface:
         
             for node_config in node_export_config:
                 node_name = graph_name + "_" + node_config.label_name
-                query = f"MATCH (node: {node_name}) RETURN node"
+                query = f"MATCH (node: {node_name}) RETURN node order by node.ID"
                 node_result = session.run(query)
                 X = list()
                 Y = list()
@@ -131,10 +131,10 @@ class Neo4jInterface:
                     query += "RETURN r, src.ID, dst.ID"
                     result = session.run(query, parameters={'x_property_names': x_property_names, 'y_property_names': y_property_names})
                     for record in result:
-                        node = record['r']
-                        node_dict = {prop: value for prop, value in node.items()}
-                        node_dict.update({'src': record['src.ID'], 'dst': record['dst.ID']})
-                        result_list.append(node_dict)
+                        edge = record['r']
+                        edge_dict = {prop: value for prop, value in edge.items()}
+                        edge_dict.update({'src': record['src.ID'], 'dst': record['dst.ID']})
+                        result_list.append(edge_dict)
                         
             else:
                 src, dst = src_dst_label
@@ -155,10 +155,10 @@ class Neo4jInterface:
                     query += "RETURN r, src.ID, dst.ID"
                     result = session.run(query, parameters={'x_property_names': x_property_names, 'y_property_names': y_property_names})
                     for record in result:
-                        node = record['r']
-                        node_dict = {prop: value for prop, value in node.items()}
-                        node_dict.update({'src': record['src.ID'], 'dst': record['dst.ID']})
-                        result_list.append(node_dict)
+                        edge = record['r']
+                        edge_dict = {prop: value for prop, value in edge.items()}
+                        edge_dict.update({'src': record['src.ID'], 'dst': record['dst.ID']})
+                        result_list.append(edge_dict)
                         
             return result_list
         
