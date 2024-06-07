@@ -91,7 +91,7 @@ Graph database connection interface. Pulling data from a graph database requires
 get_graph(conn, graph_name, node_export_config, edge_export_config) -> (Graph)
 ```
 
-Through the export configuration of nodes and edges, the graph data structure in the graph neural network framework can be exported from the graph database.
+Through the export configuration of nodes and edges, the entire graph or subgraph can be exported from the graph database.
 
 #### Parameters
 
