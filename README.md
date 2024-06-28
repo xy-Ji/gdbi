@@ -122,7 +122,7 @@ Through the export configuration of nodes and edges, the entire graph or subgrap
 ### match
 
 ```
-match(graph_name, label_name, src_dst_label, x_property_names, y_property_names) -> (ID)
+match(graph_name, label_name, src_dst_label, x_property_names, y_property_names) -> (List)
 ```
 
 Query interface. Used to query the graph database and obtain graph data information.
