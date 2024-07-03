@@ -186,7 +186,6 @@ class NebulaInterface():
             edge_type = edge_config.label_name
             query = f"MATCH (v1:{src_type})-[e:{edge_type}]->(v2:{dst_type}) RETURN id(v1) AS SID, id(v2) AS DID ORDER BY SID, DID;"
             result = self.connection_graph.execute(query)
-            print(query)
             s = list(map(int, map(str, result.column_values('SID'))))
             d = list(map(int, map(str, result.column_values('DID'))))
             edge_index_part.append(s)
