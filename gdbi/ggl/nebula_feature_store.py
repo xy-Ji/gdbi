@@ -17,9 +17,16 @@ class NebulaFeatureStore(FeatureStore):
         self.password = password
         self.graph_name = graph_name
 
+        self.create_space()
+
     def __del__(self):
         self.conn.close()
 
+    def create_space(self):
+        session = self.conn.get_session(self.user_name, self.password)
+        session.execute(f'CREATE SPACE IF NOT EXIST {self.graph_name} (vid_type=FIXED_STRING(30))')
+        session.release()
+        
     def _put_tensor(self, tensor, attr: TensorAttr):
         session = self.conn.get_session(self.user_name, self.password)
         session.execute(f"USE {self.graph_name};")
