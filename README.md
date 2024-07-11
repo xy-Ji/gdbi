@@ -1,4 +1,4 @@
-# graphDBInterface
+# GraphDBInterface
 
 --------------------------------------------------------------------------------
 The interface between the graph neural network computation framework and the graph database defines the methods and rules for data interaction between the framework and the graph database. The basic process of integrating the graph database as an external data source into the graph neural network framework can be summarized in the following steps:
