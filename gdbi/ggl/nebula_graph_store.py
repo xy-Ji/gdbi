@@ -25,7 +25,7 @@ class NebulaGraphStore(GraphStore):
     
     def create_space(self):
         session = self.conn.get_session(self.user_name, self.password)
-        session.execute(f'CREATE SPACE IF NOT EXIST {self.graph_name} (vid_type=FIXED_STRING(30))')
+        session.execute(f'CREATE SPACE IF NOT EXISTS {self.graph_name} (vid_type=INT64)')
         session.release()
     
     def _put_edge_index(self, edge_index, edge_attr: EdgeAttr) -> bool:

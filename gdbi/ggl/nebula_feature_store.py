@@ -24,7 +24,7 @@ class NebulaFeatureStore(FeatureStore):
 
     def create_space(self):
         session = self.conn.get_session(self.user_name, self.password)
-        session.execute(f'CREATE SPACE IF NOT EXIST {self.graph_name} (vid_type=FIXED_STRING(30))')
+        session.execute(f'CREATE SPACE IF NOT EXISTS {self.graph_name} (vid_type=INT64)')
         session.release()
         
     def _put_tensor(self, tensor, attr: TensorAttr):
@@ -38,7 +38,8 @@ class NebulaFeatureStore(FeatureStore):
         session.execute(f"CREATE TAG IF NOT EXISTS {group_name}({attr_name} string);")
         session.execute(f"ALTER TAG {group_name} ADD ({attr_name} string);")
         for i in range(len(tensor)):
-            query = f"INSERT VERTEX {group_name}({attr_name}) VALUES {index[i]}:('{tlx.convert_to_numpy(tensor[i])}');"
+            value = ' '.join(map(str, tlx.convert_to_numpy(tensor[i])))
+            query = f"USE {self.graph_name}; INSERT VERTEX {group_name}({attr_name}) VALUES {index[i]}:('{value}');"
             session.execute(query)
         
         session.release()
