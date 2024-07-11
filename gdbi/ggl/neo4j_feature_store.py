@@ -18,7 +18,6 @@ class Neo4jFeatureStore(FeatureStore):
             
             for i in range(len(tensor)):
                 query = f"MATCH (n:{group_name} {{ID:{index[i]}}} ) SET n.{attr_name} = '{tlx.convert_to_numpy(tensor[i])}';"
-                print(query)
                 result = session.run(query)
                 if not result.consume().counters._contains_updates:
                     query = f"CREATE (n:{group_name} {{ID: {index[i]}, {attr_name}: '{tlx.convert_to_numpy(tensor[i])}'}});"
