@@ -31,14 +31,13 @@ class Neo4jFeatureStore(FeatureStore):
             index = attr.index
             
             data = []
-            for id in index:
-                query = f"MATCH (n:{group_name} {{ID:{id}}} ) RETURN n.{attr_name} AS value;"
-                result = session.run(query)
-                for record in result:
-                    if record['value'] is None:
-                        continue
-                    value = record['value'].replace("[", "").replace("]", "").replace(",", " ").split()
-                    data.append([float(i) for i in value])
+            query = f"MATCH (n:{group_name}) WHERE n.ID in {index.tolist()} RETURN n.{attr_name} AS value;"
+            result = session.run(query)
+            for record in result:
+                if record['value'] is None:
+                    continue
+                value = record['value'].replace("[", "").replace("]", "").replace(",", " ").split()
+                data.append([float(i) for i in value])
         return tlx.convert_to_tensor(data)
 
     def _remove_tensor(self, attr):

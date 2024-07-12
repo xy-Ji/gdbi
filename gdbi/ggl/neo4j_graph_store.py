@@ -12,23 +12,24 @@ class Neo4jGraphStore(GraphStore):
         self.driver.close()
     
     def _put_edge_index(self, edge_index, edge_attr: EdgeAttr) -> bool:
+        batch_size = 128
         with self.driver.session() as session:
-            queries = []
-            for i in range(edge_index[0].size(0)):
-                queries.append({
-                    "src_id": edge_index[0][i].item(),
-                    "dst_id": edge_index[1][i].item(),
-                    "type": edge_attr.edge_type
-                })
-            
-            session.run(
-                """
-                UNWIND $rels AS rel
-                MERGE (n {ID: rel.src_id}) 
-                MERGE (m {ID: rel.dst_id}) 
-                """ + f"MERGE (n)-[r:{edge_attr.edge_type}]->(m)",
-            rels=queries
-            )
+            for i in range(0, edge_index[0].size(0), batch_size):
+                batch_queries = []
+                for j in range(i, min(i + batch_size, edge_index[0].size(0))):
+                    batch_queries.append({
+                        "src_id": edge_index[0][j].item(),
+                        "dst_id": edge_index[1][j].item()
+                    })
+
+                session.run(
+                    """
+                    UNWIND $rels AS rel
+                    MERGE (n {ID: rel.src_id}) 
+                    MERGE (m {ID: rel.dst_id}) 
+                    """ + f"MERGE (n)-[r:{edge_attr.edge_type}]->(m)",
+                    rels=batch_queries
+                )
         return True
     
     def _get_edge_index(self, edge_attr: EdgeAttr) -> EdgeTensorType:
